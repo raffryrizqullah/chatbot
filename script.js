@@ -113,7 +113,9 @@ const generateResponse = async (chatElement) => {
     // More specific error messages
     let errorMessage = error.message || 'An error occurred while processing your request';
     
-    if (isDevelopment && error.message.includes('CORS')) {
+    if (error.message.includes('401') || error.message.includes('Authentication failed')) {
+      errorMessage = '🔑 Authentication Error: API key is invalid or not configured properly in Vercel environment variables.';
+    } else if (isDevelopment && error.message.includes('CORS')) {
       errorMessage += '\n\n🔧 Development Mode: Try using Vercel CLI with "vercel dev" for proper serverless function testing, or check API CORS settings.';
     }
     
