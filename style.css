@@ -159,6 +159,43 @@ header h2 {
   background: #f2f2f2;
 }
 
+/* Markdown styling in chat messages */
+.chatbox .chat p h1,
+.chatbox .chat p h2,
+.chatbox .chat p h3 {
+  margin: 8px 0 4px 0;
+  color: #333;
+  font-weight: 600;
+}
+
+.chatbox .chat p h1 {
+  font-size: 1.1rem;
+}
+
+.chatbox .chat p h2 {
+  font-size: 1.05rem;
+}
+
+.chatbox .chat p h3 {
+  font-size: 1rem;
+  color: #724ae8;
+}
+
+.chatbox .chat p strong {
+  font-weight: 600;
+  color: #333;
+}
+
+.chatbox .chat p ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.chatbox .chat p ol li {
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
 .chatbot .chat-input {
   display: flex;
   gap: 5px;
@@ -274,6 +311,19 @@ header h2 {
   flex-grow: 1;
 }
 
+.source-title-link {
+  font-weight: 600;
+  color: #724ae8;
+  font-size: 0.8rem;
+  text-decoration: none;
+  flex-grow: 1;
+}
+
+.source-title-link:hover {
+  color: #5a3ab5;
+  text-decoration: underline;
+}
+
 .source-score {
   margin-left: 8px;
   padding: 3px 8px;
@@ -293,6 +343,40 @@ header h2 {
   font-style: italic;
   width: 100%;
   display: block;
+}
+
+/* Source URLs styling */
+.source-urls {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.source-url-link {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #e8f0fe;
+  color: #1a73e8;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 1px solid #dadce0;
+}
+
+.source-url-link:hover {
+  background: #1a73e8;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2);
+}
+
+.url-separator {
+  color: #ccc;
+  font-size: 0.7rem;
 }
 
 /* Contact info styling */
@@ -344,5 +428,15 @@ header h2 {
   .contact-info {
     font-size: 0.8rem;
     margin-top: 10px;
+  }
+  
+  .source-urls {
+    margin-top: 4px;
+    gap: 2px;
+  }
+  
+  .source-url-link {
+    padding: 1px 4px;
+    font-size: 0.65rem;
   }
 }

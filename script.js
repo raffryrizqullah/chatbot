@@ -28,6 +28,35 @@ const createChatLi = (message, className) => {
   return chatLi; // return chat <li> element
 };
 
+// Function to parse simple markdown
+const parseMarkdown = (text) => {
+  // Convert markdown to HTML
+  let html = text;
+  
+  // Headers (### -> h3, ## -> h2, # -> h1)
+  html = html.replace(/### (.*$)/gm, '<h3>$1</h3>');
+  html = html.replace(/## (.*$)/gm, '<h2>$1</h2>');
+  html = html.replace(/# (.*$)/gm, '<h1>$1</h1>');
+  
+  // Bold text (**text** -> <strong>)
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Numbered lists (1. item -> <ol><li>)
+  html = html.replace(/^\d+\.\s+(.*)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>)/s, '<ol>$1</ol>');
+  
+  // Line breaks
+  html = html.replace(/\n\n/g, '</p><p>');
+  html = html.replace(/\n/g, '<br>');
+  
+  // Wrap in paragraph if not already wrapped
+  if (!html.startsWith('<')) {
+    html = '<p>' + html + '</p>';
+  }
+  
+  return html;
+};
+
 const generateResponse = async (chatElement) => {
   const messageElement = chatElement.querySelector("p");
 
@@ -81,14 +110,17 @@ const generateResponse = async (chatElement) => {
       }
     }
     
-    // Set the main answer first
-    messageElement.textContent = mainAnswer;
+    // Parse markdown and set the main answer
+    const parsedAnswer = parseMarkdown(mainAnswer);
+    messageElement.innerHTML = parsedAnswer;
     
     // Handle sources if they exist and have valid content
     const hasValidSources = data.sources && 
                            Array.isArray(data.sources) && 
                            data.sources.length > 0 &&
-                           data.sources.some(source => source.text && source.text.trim() && source.source && source.source.trim());
+                           data.sources.some(source => source.text && source.text.trim() && 
+                             ((Array.isArray(source.source) && source.source.length > 0) || 
+                              (source.source && source.source.trim())));
     
     if (hasValidSources) {
       const sourcesContainer = document.createElement("div");
@@ -101,7 +133,9 @@ const generateResponse = async (chatElement) => {
       
       // Filter out empty or invalid sources
       const validSources = data.sources.filter(source => 
-        source.text && source.text.trim() && source.source && source.source.trim()
+        source.text && source.text.trim() && 
+        ((Array.isArray(source.source) && source.source.length > 0) || 
+         (source.source && source.source.trim()))
       );
       
       validSources.forEach((source, index) => {
@@ -112,10 +146,41 @@ const generateResponse = async (chatElement) => {
         const sourceHeader = document.createElement("div");
         sourceHeader.className = "source-header";
         
-        const sourceTitle = document.createElement("span");
-        sourceTitle.className = "source-title-text";
-        sourceTitle.textContent = source.source || `Sumber ${index + 1}`;
-        sourceHeader.appendChild(sourceTitle);
+        // Handle source title and URLs
+        let sourceUrls = [];
+        let sourceDisplayName = '';
+        
+        if (Array.isArray(source.source)) {
+          // Handle array of URLs
+          sourceUrls = source.source.filter(url => url && url.startsWith('http'));
+          sourceDisplayName = `Dokumen BSI UII`;
+        } else if (source.source && source.source !== 'unknown') {
+          // Handle single source
+          if (source.source.startsWith('http')) {
+            sourceUrls = [source.source];
+            sourceDisplayName = 'Dokumen Online';
+          } else {
+            sourceDisplayName = source.source;
+          }
+        } else {
+          sourceDisplayName = `Sumber ${index + 1}`;
+        }
+        
+        if (sourceUrls.length > 0) {
+          // Create clickable link for title
+          const sourceLink = document.createElement("a");
+          sourceLink.href = sourceUrls[0];
+          sourceLink.target = "_blank";
+          sourceLink.rel = "noopener noreferrer";
+          sourceLink.className = "source-title-link";
+          sourceLink.textContent = sourceDisplayName;
+          sourceHeader.appendChild(sourceLink);
+        } else {
+          const sourceTitle = document.createElement("span");
+          sourceTitle.className = "source-title-text";
+          sourceTitle.textContent = sourceDisplayName;
+          sourceHeader.appendChild(sourceTitle);
+        }
         
         // Add score indicator if available
         if (source.score !== undefined && source.score > 0) {
@@ -128,13 +193,60 @@ const generateResponse = async (chatElement) => {
         // Create source text preview
         const sourceText = document.createElement("p");
         sourceText.className = "source-text";
-        const truncatedText = source.text.length > 120 
-          ? source.text.substring(0, 120) + "..." 
-          : source.text;
+        
+        // Clean up markdown from source text
+        let cleanText = source.text;
+        cleanText = cleanText.replace(/\*\*(.*?)\*\*/g, '$1'); // Remove bold markdown
+        cleanText = cleanText.replace(/RINGKASAN:\s*/g, ''); // Remove "RINGKASAN:" prefix
+        cleanText = cleanText.replace(/\s+/g, ' '); // Normalize whitespace
+        cleanText = cleanText.trim();
+        
+        const truncatedText = cleanText.length > 150 
+          ? cleanText.substring(0, 150) + "..." 
+          : cleanText;
         sourceText.textContent = truncatedText;
         
         sourceItem.appendChild(sourceHeader);
         sourceItem.appendChild(sourceText);
+        
+        // Add URL links below text if available
+        if (sourceUrls.length > 0) {
+          const urlContainer = document.createElement("div");
+          urlContainer.className = "source-urls";
+          
+          sourceUrls.forEach((url, urlIndex) => {
+            const urlLink = document.createElement("a");
+            urlLink.href = url;
+            urlLink.target = "_blank";
+            urlLink.rel = "noopener noreferrer";
+            urlLink.className = "source-url-link";
+            
+            // Create friendly URL text
+            let urlText = '';
+            if (url.includes('bsi.uii.ac.id')) {
+              if (url.includes('.pdf')) {
+                urlText = "📄 Panduan PDF";
+              } else {
+                urlText = "🌐 Halaman Web BSI";
+              }
+            } else {
+              urlText = `🔗 Link ${urlIndex + 1}`;
+            }
+            
+            urlLink.textContent = urlText;
+            urlContainer.appendChild(urlLink);
+            
+            if (urlIndex < sourceUrls.length - 1) {
+              const separator = document.createElement("span");
+              separator.textContent = " • ";
+              separator.className = "url-separator";
+              urlContainer.appendChild(separator);
+            }
+          });
+          
+          sourceItem.appendChild(urlContainer);
+        }
+        
         sourcesContainer.appendChild(sourceItem);
       });
       
