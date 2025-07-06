@@ -60,51 +60,94 @@ const generateResponse = async (chatElement) => {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || `API request failed with status ${response.status}`);
 
-    // Get the API response text and update the message element
-    messageElement.textContent = data.answer || data.message || 'No response received';
+    // Split answer to separate main content from contact info
+    const fullAnswer = data.answer || data.message || 'No response received';
+    const contactPhrases = [
+      'Jika masih membutuhkan bantuan lebih lanjut',
+      'Untuk bantuan tambahan atau konsultasi lebih detail',
+      'Apabila solusi di atas belum menyelesaikan masalah'
+    ];
     
-    // Handle sources if they exist
-    if (data.sources && Array.isArray(data.sources) && data.sources.length > 0) {
+    let mainAnswer = fullAnswer;
+    let contactInfo = '';
+    
+    // Find and separate contact information
+    for (const phrase of contactPhrases) {
+      const contactIndex = fullAnswer.indexOf(phrase);
+      if (contactIndex !== -1) {
+        mainAnswer = fullAnswer.substring(0, contactIndex).trim();
+        contactInfo = fullAnswer.substring(contactIndex).trim();
+        break;
+      }
+    }
+    
+    // Set the main answer first
+    messageElement.textContent = mainAnswer;
+    
+    // Handle sources if they exist and have valid content
+    const hasValidSources = data.sources && 
+                           Array.isArray(data.sources) && 
+                           data.sources.length > 0 &&
+                           data.sources.some(source => source.text && source.text.trim() && source.source && source.source.trim());
+    
+    if (hasValidSources) {
       const sourcesContainer = document.createElement("div");
       sourcesContainer.className = "sources-container";
       
       const sourcesTitle = document.createElement("p");
-      sourcesTitle.textContent = `Sources (${data.source_count || data.sources.length}):`;
+      sourcesTitle.textContent = `📚 Sumber Referensi (${data.source_count || data.sources.length}):`;
       sourcesTitle.className = "sources-title";
       sourcesContainer.appendChild(sourcesTitle);
       
-      data.sources.forEach((source, index) => {
+      // Filter out empty or invalid sources
+      const validSources = data.sources.filter(source => 
+        source.text && source.text.trim() && source.source && source.source.trim()
+      );
+      
+      validSources.forEach((source, index) => {
         const sourceItem = document.createElement("div");
         sourceItem.className = "source-item";
         
-        // Create source link/title
-        const sourceLink = document.createElement("span");
-        sourceLink.className = "source-link";
-        sourceLink.textContent = source.source || `Source ${index + 1}`;
+        // Create source header with title and score
+        const sourceHeader = document.createElement("div");
+        sourceHeader.className = "source-header";
+        
+        const sourceTitle = document.createElement("span");
+        sourceTitle.className = "source-title-text";
+        sourceTitle.textContent = source.source || `Sumber ${index + 1}`;
+        sourceHeader.appendChild(sourceTitle);
+        
+        // Add score indicator if available
+        if (source.score !== undefined && source.score > 0) {
+          const scoreIndicator = document.createElement("span");
+          scoreIndicator.className = "source-score";
+          scoreIndicator.textContent = `${(source.score * 100).toFixed(1)}%`;
+          sourceHeader.appendChild(scoreIndicator);
+        }
         
         // Create source text preview
         const sourceText = document.createElement("p");
         sourceText.className = "source-text";
-        const truncatedText = source.text && source.text.length > 150 
-          ? source.text.substring(0, 150) + "..." 
-          : source.text || "No preview available";
+        const truncatedText = source.text.length > 120 
+          ? source.text.substring(0, 120) + "..." 
+          : source.text;
         sourceText.textContent = truncatedText;
         
-        // Create score indicator if available
-        if (source.score !== undefined) {
-          const scoreIndicator = document.createElement("span");
-          scoreIndicator.className = "source-score";
-          scoreIndicator.textContent = `${(source.score * 100).toFixed(1)}%`;
-          sourceLink.appendChild(scoreIndicator);
-        }
-        
-        sourceItem.appendChild(sourceLink);
+        sourceItem.appendChild(sourceHeader);
         sourceItem.appendChild(sourceText);
         sourcesContainer.appendChild(sourceItem);
       });
       
-      // Insert sources after the message
+      // Insert sources after the main message
       chatElement.appendChild(sourcesContainer);
+    }
+    
+    // Add contact information at the end if it exists
+    if (contactInfo) {
+      const contactContainer = document.createElement("div");
+      contactContainer.className = "contact-info";
+      contactContainer.textContent = contactInfo;
+      chatElement.appendChild(contactContainer);
     }
   } catch (error) {
     // Handle error
