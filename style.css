@@ -261,71 +261,55 @@ header h2 {
   }
 }
 
-/* Sources styling */
-.sources-container {
-  width: 100%;
-  clear: both;
-  margin: 12px 0;
-  padding: 10px 0;
+/* New unified content styling */
+.sources-section {
+  margin: 16px 0;
+  padding: 12px 0;
   border-top: 1px solid #e0e0e0;
   border-bottom: 1px solid #e0e0e0;
-  display: block;
 }
 
-.sources-title {
-  font-size: 0.85rem;
+.sources-section h4 {
+  font-size: 0.9rem;
   font-weight: 600;
   color: #333;
-  margin: 0 0 10px 0;
+  margin: 0 0 12px 0;
   padding: 0;
-  background: none;
-  border-radius: 0;
-  display: block;
-  width: 100%;
 }
 
 .source-item {
-  width: 100%;
-  margin-bottom: 10px;
-  padding: 8px 10px;
+  margin-bottom: 12px;
+  padding: 10px;
   background: #f8f9fa;
   border-radius: 8px;
   border-left: 4px solid #724ae8;
-  display: block;
-  clear: both;
-  box-sizing: border-box;
+  overflow: hidden;
+  word-wrap: break-word;
 }
 
 .source-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 6px;
-  width: 100%;
+  gap: 8px;
 }
 
-.source-title-text {
-  font-weight: 600;
-  color: #724ae8;
-  font-size: 0.8rem;
-  flex-grow: 1;
-}
-
-.source-title-link {
+.source-title {
   font-weight: 600;
   color: #724ae8;
   font-size: 0.8rem;
   text-decoration: none;
-  flex-grow: 1;
+  flex: 1;
+  min-width: 0;
 }
 
-.source-title-link:hover {
+.source-title:hover {
   color: #5a3ab5;
   text-decoration: underline;
 }
 
 .source-score {
-  margin-left: 8px;
   padding: 3px 8px;
   background: #724ae8;
   color: white;
@@ -333,30 +317,29 @@ header h2 {
   font-size: 0.7rem;
   font-weight: 500;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .source-text {
   font-size: 0.75rem;
   color: #666;
-  margin: 0;
+  margin: 0 0 8px 0;
   line-height: 1.4;
   font-style: italic;
-  width: 100%;
-  display: block;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-/* Source URLs styling */
-.source-urls {
-  margin-top: 6px;
+.source-links {
   display: flex;
   flex-wrap: wrap;
+  gap: 6px;
   align-items: center;
-  gap: 4px;
 }
 
-.source-url-link {
+.source-link {
   display: inline-block;
-  padding: 2px 6px;
+  padding: 3px 8px;
   background: #e8f0fe;
   color: #1a73e8;
   text-decoration: none;
@@ -365,42 +348,45 @@ header h2 {
   font-weight: 500;
   transition: all 0.2s ease;
   border: 1px solid #dadce0;
+  white-space: nowrap;
 }
 
-.source-url-link:hover {
+.source-link:hover {
   background: #1a73e8;
   color: white;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2);
 }
 
-.url-separator {
+.link-separator {
   color: #ccc;
   font-size: 0.7rem;
 }
 
-/* Contact info styling */
-.contact-info {
-  width: 100%;
-  margin-top: 12px;
-  padding: 8px 0;
+.contact-section {
+  margin-top: 16px;
+  padding: 12px 0;
   font-size: 0.85rem;
   color: #555;
   border-top: 1px solid #f0f0f0;
-  clear: both;
-  display: block;
+  line-height: 1.4;
 }
 
-/* Mobile responsiveness for sources */
+/* Mobile responsiveness */
 @media (max-width: 490px) {
-  .sources-container {
-    margin: 10px 0;
-    padding: 8px 0;
+  .sources-section {
+    margin: 12px 0;
+    padding: 10px 0;
+  }
+  
+  .sources-section h4 {
+    font-size: 0.85rem;
+    margin-bottom: 10px;
   }
   
   .source-item {
-    margin-bottom: 8px;
-    padding: 6px 8px;
+    margin-bottom: 10px;
+    padding: 8px;
   }
   
   .source-header {
@@ -409,34 +395,34 @@ header h2 {
     gap: 4px;
   }
   
-  .source-title-text {
+  .source-title {
     font-size: 0.75rem;
   }
   
   .source-score {
-    margin-left: 0;
+    align-self: flex-start;
     padding: 2px 6px;
     font-size: 0.65rem;
-    align-self: flex-start;
   }
   
   .source-text {
     font-size: 0.7rem;
     line-height: 1.3;
+    margin-bottom: 6px;
   }
   
-  .contact-info {
-    font-size: 0.8rem;
-    margin-top: 10px;
+  .source-links {
+    gap: 4px;
   }
   
-  .source-urls {
-    margin-top: 4px;
-    gap: 2px;
-  }
-  
-  .source-url-link {
-    padding: 1px 4px;
+  .source-link {
+    padding: 2px 6px;
     font-size: 0.65rem;
+  }
+  
+  .contact-section {
+    font-size: 0.8rem;
+    margin-top: 12px;
+    padding: 10px 0;
   }
 }
