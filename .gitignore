@@ -1,0 +1,111 @@
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.development
+.env.*.local
+
+# API Keys and Secrets
+*.key
+*.pem
+config/secrets.js
+secrets/
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Dependency Directories
+node_modules/
+jspm_packages/
+
+# Build Output
+dist/
+build/
+out/
+.output/
+.vercel/
+.netlify/
+
+# Cache Directories
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+
+# Coverage Reports
+coverage/
+*.lcov
+.nyc_output/
+
+# Runtime Data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary Files
+tmp/
+temp/
+.tmp/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env.test
+
+# Backup Files
+*.backup
+*.bak
+*.old
+
+# Development Tools
+.vercel
+.vscode/settings.json
+.history/
+
+# Misc
+*.tgz
+*.tar.gz
+package-lock.json
+
+# Local development files
+local/
+dev/
+debug/
+
+# Documentation that shouldn't be public
+PRIVATE.md
+NOTES.md
+TODO.private.md
