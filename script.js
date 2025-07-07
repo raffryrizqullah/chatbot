@@ -39,6 +39,25 @@ const isInsideLink = (text, match, startIndex) => {
   return lastOpenTag > lastCloseTag;
 };
 
+// Smart URL shortening for better readability
+const shortenURL = (url) => {
+  try {
+    const urlObj = new URL(url);
+    const domain = urlObj.hostname.replace('www.', '');
+    
+    // Handle different URL lengths
+    if (url.length <= 30) {
+      return url; // Short URLs displayed as-is
+    }
+    
+    // Long URLs show domain with ellipsis
+    return `${domain}...`;
+  } catch (e) {
+    // Fallback for invalid URLs
+    return url.length > 30 ? url.substring(0, 30) + '...' : url;
+  }
+};
+
 // Comprehensive Link and Email Detection
 const convertLinksToHTML = (text) => {
   let html = text;
@@ -47,7 +66,7 @@ const convertLinksToHTML = (text) => {
   const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gi;
   html = html.replace(emailRegex, (match, p1, offset) => {
     if (isInsideLink(html, match, offset)) return match;
-    return `<a href="mailto:${match}">${match}</a>`;
+    return `<a href="mailto:${match}" class="email-link">📧 ${match}</a>`;
   });
   
   // Step 2: Convert URLs with protocol (http/https)
@@ -57,7 +76,8 @@ const convertLinksToHTML = (text) => {
     // Clean URL (remove trailing punctuation if not part of URL)
     const cleanUrl = match.replace(/[.,;:!?]$/, '');
     const trailingPunc = match.substring(cleanUrl.length);
-    return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>${trailingPunc}`;
+    const displayText = shortenURL(cleanUrl);
+    return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" title="${cleanUrl}">${displayText}</a>${trailingPunc}`;
   });
   
   // Step 3: Convert www URLs (add https://)
@@ -67,7 +87,9 @@ const convertLinksToHTML = (text) => {
     // Clean URL
     const cleanUrl = url.replace(/[.,;:!?]$/, '');
     const trailingPunc = url.substring(cleanUrl.length);
-    return `${prefix}<a href="https://${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>${trailingPunc}`;
+    const fullUrl = `https://${cleanUrl}`;
+    const displayText = shortenURL(fullUrl);
+    return `${prefix}<a href="${fullUrl}" target="_blank" rel="noopener noreferrer" title="${fullUrl}">${displayText}</a>${trailingPunc}`;
   });
   
   // Step 4: Convert standalone domain URLs (be very careful with false positives)
@@ -187,8 +209,8 @@ const createSourcesHTML = (sources) => {
   
   if (!sourceUrl) return '';
   
-  // Return integrated source link (no separate container)
-  return `<br><br><a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="source-link-integrated">📋 Sumber</a>`;
+  // Return dengan elegant separator dan container
+  return `<hr class="source-separator"><div class="source-container"><a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="source-link-integrated">📋 Sumber</a></div>`;
 };
 
 
