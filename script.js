@@ -31,18 +31,38 @@ const createChatLi = (message, className) => {
 // Utility Functions
 const parseMarkdown = (text) => {
   let html = text;
+  
+  // Handle headers
   html = html.replace(/### (.*$)/gm, '<h3>$1</h3>');
   html = html.replace(/## (.*$)/gm, '<h2>$1</h2>');
   html = html.replace(/# (.*$)/gm, '<h1>$1</h1>');
+  
+  // Handle bold text
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Handle numbered lists with proper wrapping
   html = html.replace(/^\d+\.\s+(.*)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>)/s, '<ol>$1</ol>');
+  html = html.replace(/(<li>.*?<\/li>(?:\s*<li>.*?<\/li>)*)/gs, '<ol>$1</ol>');
+  
+  // Handle bullet points
+  html = html.replace(/^[\*\-\+]\s+(.*)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*?<\/li>(?:\s*<li>.*?<\/li>)*)/gs, (match) => {
+    // Only convert to ul if it's not already wrapped in ol
+    if (!match.includes('<ol>')) {
+      return '<ul>' + match + '</ul>';
+    }
+    return match;
+  });
+  
+  // Handle paragraph breaks
   html = html.replace(/\n\n/g, '</p><p>');
   html = html.replace(/\n/g, '<br>');
   
+  // Wrap in paragraph if not already wrapped
   if (!html.startsWith('<')) {
     html = '<p>' + html + '</p>';
   }
+  
   return html;
 };
 
