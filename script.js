@@ -81,43 +81,31 @@ const createSourcesHTML = (sources) => {
   
   if (validSources.length === 0) return '';
   
+  // Sort by score descending and take only the highest one
+  const sortedSources = validSources.sort((a, b) => (b.score || 0) - (a.score || 0));
+  const bestSource = sortedSources[0];
+  
+  let sourceUrls = [];
+  let sourceTitle = '';
+  
+  if (Array.isArray(bestSource.source)) {
+    sourceUrls = bestSource.source.filter(url => url && url.startsWith('http'));
+    sourceTitle = 'Dokumen BSI UII';
+  } else if (bestSource.source && bestSource.source !== 'unknown') {
+    if (bestSource.source.startsWith('http')) {
+      sourceUrls = [bestSource.source];
+      sourceTitle = 'Dokumen Online';
+    } else {
+      sourceTitle = bestSource.source;
+    }
+  } else {
+    sourceTitle = 'Sumber Referensi';
+  }
+  
+  const scoreText = bestSource.score ? `${(bestSource.score * 100).toFixed(1)}%` : '';
+  
   let sourcesHTML = `
     <div class="sources-section">
-      <h4>📚 Sumber Referensi (${validSources.length}):</h4>
-  `;
-  
-  validSources.forEach((source, index) => {
-    let sourceUrls = [];
-    let sourceTitle = '';
-    
-    if (Array.isArray(source.source)) {
-      sourceUrls = source.source.filter(url => url && url.startsWith('http'));
-      sourceTitle = 'Dokumen BSI UII';
-    } else if (source.source && source.source !== 'unknown') {
-      if (source.source.startsWith('http')) {
-        sourceUrls = [source.source];
-        sourceTitle = 'Dokumen Online';
-      } else {
-        sourceTitle = source.source;
-      }
-    } else {
-      sourceTitle = `Sumber ${index + 1}`;
-    }
-    
-    // Clean source text
-    let cleanText = source.text
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/RINGKASAN:\s*/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    
-    const truncatedText = cleanText.length > 150 
-      ? cleanText.substring(0, 150) + "..." 
-      : cleanText;
-    
-    const scoreText = source.score ? `${(source.score * 100).toFixed(1)}%` : '';
-    
-    sourcesHTML += `
       <div class="source-item">
         <div class="source-header">
           ${sourceUrls.length > 0 
@@ -126,13 +114,11 @@ const createSourcesHTML = (sources) => {
           }
           ${scoreText ? `<span class="source-score">${scoreText}</span>` : ''}
         </div>
-        <p class="source-text">${truncatedText}</p>
         ${sourceUrls.length > 0 ? createSourceLinksHTML(sourceUrls) : ''}
       </div>
-    `;
-  });
+    </div>
+  `;
   
-  sourcesHTML += '</div>';
   return sourcesHTML;
 };
 
@@ -143,9 +129,9 @@ const createSourceLinksHTML = (urls) => {
   urls.forEach((url, index) => {
     let linkText = '';
     if (url.includes('bsi.uii.ac.id')) {
-      linkText = url.includes('.pdf') ? '📄 Panduan PDF' : '🌐 Halaman Web BSI';
+      linkText = url.includes('.pdf') ? '📄 PDF' : '🌐 Web';
     } else {
-      linkText = `🔗 Link ${index + 1}`;
+      linkText = `🔗 Link`;
     }
     
     linksHTML += `<a href="${url}" target="_blank" rel="noopener noreferrer" class="source-link">${linkText}</a>`;
