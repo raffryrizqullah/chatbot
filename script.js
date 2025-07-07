@@ -28,140 +28,70 @@ const createChatLi = (message, className) => {
   return chatLi; // return chat <li> element
 };
 
-// Utility Functions
+// Utility Functions - Simplified Markdown Parser
 const parseMarkdown = (text) => {
-  let html = text;
+  if (!text) return '';
   
-  // Handle headers
-  html = html.replace(/### (.*$)/gm, '<h3>$1</h3>');
-  html = html.replace(/## (.*$)/gm, '<h2>$1</h2>');
-  html = html.replace(/# (.*$)/gm, '<h1>$1</h1>');
+  let html = text.trim();
   
-  // Handle bold text
-  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Convert headers (### ## #) to HTML
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
   
-  // Handle numbered lists with proper wrapping
-  html = html.replace(/^\d+\.\s+(.*)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*?<\/li>(?:\s*<li>.*?<\/li>)*)/gs, '<ol>$1</ol>');
+  // Convert bold text (**text**)
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   
-  // Handle bullet points
-  html = html.replace(/^[\*\-\+]\s+(.*)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*?<\/li>(?:\s*<li>.*?<\/li>)*)/gs, (match) => {
-    // Only convert to ul if it's not already wrapped in ol
+  // Convert numbered lists (1. 2. 3.)
+  html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>(\n<li>.*<\/li>)*)/gm, '<ol>$1</ol>');
+  
+  // Convert bullet points (- * +)
+  html = html.replace(/^[\-\*\+]\s+(.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>(\n<li>.*<\/li>)*)/gm, (match) => {
     if (!match.includes('<ol>')) {
       return '<ul>' + match + '</ul>';
     }
     return match;
   });
   
-  // Handle paragraph breaks
-  html = html.replace(/\n\n/g, '</p><p>');
+  // Convert line breaks
+  html = html.replace(/\n\n/g, '<br><br>');
   html = html.replace(/\n/g, '<br>');
-  
-  // Wrap in paragraph if not already wrapped
-  if (!html.startsWith('<')) {
-    html = '<p>' + html + '</p>';
-  }
   
   return html;
 };
 
-const separateAnswerFromContact = (fullAnswer) => {
-  const contactPhrases = [
-    'Jika masih membutuhkan bantuan lebih lanjut',
-    'Untuk bantuan tambahan atau konsultasi lebih detail',
-    'Apabila solusi di atas belum menyelesaikan masalah'
-  ];
-  
-  let mainAnswer = fullAnswer;
-  let contactInfo = '';
-  
-  for (const phrase of contactPhrases) {
-    const contactIndex = fullAnswer.indexOf(phrase);
-    if (contactIndex !== -1) {
-      mainAnswer = fullAnswer.substring(0, contactIndex).trim();
-      contactInfo = fullAnswer.substring(contactIndex).trim();
-      break;
-    }
-  }
-  
-  return { mainAnswer, contactInfo };
-};
 
+// Ultra-minimal single source display
 const createSourcesHTML = (sources) => {
   if (!sources || !Array.isArray(sources) || sources.length === 0) {
     return '';
   }
   
-  const validSources = sources.filter(source => 
-    source.text && source.text.trim() && 
-    ((Array.isArray(source.source) && source.source.length > 0) || 
-     (source.source && source.source.trim()))
-  );
+  // Find the source with highest score
+  const bestSource = sources
+    .filter(source => source.text && source.text.trim())
+    .sort((a, b) => (b.score || 0) - (a.score || 0))[0];
   
-  if (validSources.length === 0) return '';
+  if (!bestSource) return '';
   
-  // Sort by score descending and take only the highest one
-  const sortedSources = validSources.sort((a, b) => (b.score || 0) - (a.score || 0));
-  const bestSource = sortedSources[0];
-  
-  let sourceUrls = [];
-  let sourceTitle = '';
-  
+  // Get the first valid URL
+  let sourceUrl = '';
   if (Array.isArray(bestSource.source)) {
-    sourceUrls = bestSource.source.filter(url => url && url.startsWith('http'));
-    sourceTitle = 'Dokumen BSI UII';
-  } else if (bestSource.source && bestSource.source !== 'unknown') {
-    if (bestSource.source.startsWith('http')) {
-      sourceUrls = [bestSource.source];
-      sourceTitle = 'Dokumen Online';
-    } else {
-      sourceTitle = bestSource.source;
-    }
-  } else {
-    sourceTitle = 'Sumber Referensi';
+    sourceUrl = bestSource.source.find(url => url && url.startsWith('http'));
+  } else if (bestSource.source && bestSource.source.startsWith('http')) {
+    sourceUrl = bestSource.source;
   }
   
-  const scoreText = bestSource.score ? `${(bestSource.score * 100).toFixed(1)}%` : '';
+  if (!sourceUrl) return '';
   
-  let sourcesHTML = `
-    <div class="sources-section">
-      <div class="source-item">
-        <div class="source-header">
-          ${sourceUrls.length > 0 
-            ? `<a href="${sourceUrls[0]}" target="_blank" rel="noopener noreferrer" class="source-title">${sourceTitle}</a>`
-            : `<span class="source-title">${sourceTitle}</span>`
-          }
-          ${scoreText ? `<span class="source-score">${scoreText}</span>` : ''}
-        </div>
-        ${sourceUrls.length > 0 ? createSourceLinksHTML(sourceUrls) : ''}
-      </div>
-    </div>
-  `;
-  
-  return sourcesHTML;
+  // Return simple source link
+  return `<div class="source-link-simple">
+    <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer">Sumber</a>
+  </div>`;
 };
 
-const createSourceLinksHTML = (urls) => {
-  if (!urls || urls.length === 0) return '';
-  
-  let linksHTML = '<div class="source-links">';
-  urls.forEach((url, index) => {
-    let linkText = '';
-    if (url.includes('bsi.uii.ac.id')) {
-      linkText = url.includes('.pdf') ? '📄 PDF' : '🌐 Web';
-    } else {
-      linkText = `🔗 Link`;
-    }
-    
-    linksHTML += `<a href="${url}" target="_blank" rel="noopener noreferrer" class="source-link">${linkText}</a>`;
-    if (index < urls.length - 1) {
-      linksHTML += '<span class="link-separator"> • </span>';
-    }
-  });
-  linksHTML += '</div>';
-  return linksHTML;
-};
 
 const generateResponse = async (chatElement) => {
   const messageElement = chatElement.querySelector("p");
@@ -203,19 +133,17 @@ const fetchChatResponse = async () => {
   return data;
 };
 
+// Streamlined content builder
 const buildChatContent = (data) => {
-  const fullAnswer = data.answer || data.message || 'No response received';
-  const { mainAnswer, contactInfo } = separateAnswerFromContact(fullAnswer);
+  const answer = data.answer || data.message || 'Maaf, tidak ada respons yang diterima.';
   
-  let content = parseMarkdown(mainAnswer);
+  // Parse markdown to clean HTML
+  let content = parseMarkdown(answer);
   
+  // Add single source link if available
   const sourcesHTML = createSourcesHTML(data.sources);
   if (sourcesHTML) {
     content += sourcesHTML;
-  }
-  
-  if (contactInfo) {
-    content += `<div class="contact-section">${contactInfo}</div>`;
   }
   
   return content;
