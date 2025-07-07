@@ -28,16 +28,81 @@ const createChatLi = (message, className) => {
   return chatLi; // return chat <li> element
 };
 
-// Enhanced Markdown Parser with URL Detection
-const parseMarkdown = (text) => {
-  if (!text) return '';
+// Helper function to check if text is already inside a link
+const isInsideLink = (text, match, startIndex) => {
+  // Look backwards from match position to find if we're inside <a> tag
+  const beforeMatch = text.substring(0, startIndex);
+  const lastOpenTag = beforeMatch.lastIndexOf('<a ');
+  const lastCloseTag = beforeMatch.lastIndexOf('</a>');
   
-  let html = text.trim();
+  // If there's an open <a> tag after the last close tag, we're inside a link
+  return lastOpenTag > lastCloseTag;
+};
+
+// Comprehensive Link and Email Detection
+const convertLinksToHTML = (text) => {
+  let html = text;
   
-  // Convert URLs to clickable links first (before other formatting)
-  const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`[\]]+)/g;
-  html = html.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  // Step 1: Convert email addresses first (to avoid conflict with domain detection)
+  const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gi;
+  html = html.replace(emailRegex, (match, p1, offset) => {
+    if (isInsideLink(html, match, offset)) return match;
+    return `<a href="mailto:${match}">${match}</a>`;
+  });
   
+  // Step 2: Convert URLs with protocol (http/https)
+  const urlWithProtocolRegex = /(https?:\/\/[^\s<>"{}|\\^`[\]()]+)/gi;
+  html = html.replace(urlWithProtocolRegex, (match, p1, offset) => {
+    if (isInsideLink(html, match, offset)) return match;
+    // Clean URL (remove trailing punctuation if not part of URL)
+    const cleanUrl = match.replace(/[.,;:!?]$/, '');
+    const trailingPunc = match.substring(cleanUrl.length);
+    return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>${trailingPunc}`;
+  });
+  
+  // Step 3: Convert www URLs (add https://)
+  const wwwUrlRegex = /(^|[\s\n])(www\.[a-zA-Z0-9][a-zA-Z0-9.-]*[a-zA-Z0-9]\.[a-zA-Z]{2,}(?:\/[^\s<>"{}|\\^`[\]()]*)?)/gi;
+  html = html.replace(wwwUrlRegex, (match, prefix, url, offset) => {
+    if (isInsideLink(html, match, offset) || match.includes('@')) return match;
+    // Clean URL
+    const cleanUrl = url.replace(/[.,;:!?]$/, '');
+    const trailingPunc = url.substring(cleanUrl.length);
+    return `${prefix}<a href="https://${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>${trailingPunc}`;
+  });
+  
+  // Step 4: Convert standalone domain URLs (be very careful with false positives)
+  const domainUrlRegex = /(^|[\s\n])([a-zA-Z0-9][a-zA-Z0-9.-]*[a-zA-Z0-9]\.[a-zA-Z]{2,}(?:\/[^\s<>"{}|\\^`[\]()]*)?)/gi;
+  html = html.replace(domainUrlRegex, (match, prefix, domain, offset) => {
+    // Skip if already converted, contains @, or looks like email
+    if (isInsideLink(html, match, offset) || match.includes('@') || domain.includes('@')) return match;
+    
+    // Skip common false positives
+    const falsePositives = /\.(js|css|html|txt|pdf|doc|docx|xls|xlsx|png|jpg|jpeg|gif|svg|mp4|mp3|avi|zip|rar|tar|gz)$/i;
+    if (falsePositives.test(domain)) return match;
+    
+    // Skip if it's likely a file path, version number, or IP address
+    if (domain.match(/^[\d.]+$/) || domain.includes('..') || domain.startsWith('.')) return match;
+    
+    // Must have valid TLD and reasonable domain structure
+    const validTLD = /\.(com|org|net|edu|gov|mil|int|co|id|ac|go|or|my|sg|th|ph|vn|in|au|uk|de|fr|jp|cn|ru|br|mx|ca|us|info|biz|name|pro|tech|io|app|dev|cloud|online|site|store|blog|news|tv|fm|am|ly|me|cc|tw|kr|hk|asia|mobi|travel|museum|aero|jobs|cat|tel|xxx|post|geo|xxx|arpa)$/i;
+    if (!validTLD.test(domain)) return match;
+    
+    // Skip single character domains or obviously invalid patterns
+    const domainParts = domain.split('.');
+    if (domainParts[0].length < 2 || domain.includes('--')) return match;
+    
+    // Clean domain
+    const cleanDomain = domain.replace(/[.,;:!?]$/, '');
+    const trailingPunc = domain.substring(cleanDomain.length);
+    
+    return `${prefix}<a href="https://${cleanDomain}" target="_blank" rel="noopener noreferrer">${cleanDomain}</a>${trailingPunc}`;
+  });
+  
+  return html;
+};
+
+// Convert Markdown Elements
+const convertMarkdownElements = (html) => {
   // Convert headers (### ## #) to HTML
   html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
   html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
@@ -65,12 +130,35 @@ const parseMarkdown = (text) => {
     }
   });
   
+  return html;
+};
+
+// Handle Line Breaks and Cleanup
+const handleLineBreaks = (html) => {
   // Convert line breaks (double newlines to paragraph breaks, single to br)
   html = html.replace(/\n\n+/g, '<br><br>');
   html = html.replace(/\n/g, '<br>');
   
-  // Clean up any double br tags
+  // Clean up any excessive br tags
   html = html.replace(/(<br>\s*){3,}/g, '<br><br>');
+  
+  return html;
+};
+
+// Enhanced Markdown Parser with Comprehensive Link Detection
+const parseMarkdown = (text) => {
+  if (!text) return '';
+  
+  let html = text.trim();
+  
+  // Step 1: Convert all types of links and emails FIRST
+  html = convertLinksToHTML(html);
+  
+  // Step 2: Convert markdown elements
+  html = convertMarkdownElements(html);
+  
+  // Step 3: Handle line breaks and cleanup
+  html = handleLineBreaks(html);
   
   return html;
 };
