@@ -1,5 +1,20 @@
-/* Apple-style typography */
+/* UII-branded chatbot styling */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+/* UII Color Variables */
+:root {
+  --uii-blue-primary: #1B4F8C;
+  --uii-blue-dark: #0F3A6B;
+  --uii-blue-light: #2E5D9A;
+  --uii-gold-primary: #F4C430;
+  --uii-gold-dark: #E6B422;
+  --uii-gold-light: #F7D152;
+  --neutral-bg: #F8F9FA;
+  --neutral-white: #FFFFFF;
+  --neutral-text: #2C3E50;
+  --neutral-text-light: #6C757D;
+  --neutral-border: #E9ECEF;
+}
 
 * {
   margin: 0;
@@ -9,7 +24,7 @@
 }
 
 body {
-  background: #F2F2F7;
+  background: var(--neutral-bg);
 }
 
 .chatbot-toggler {
@@ -25,12 +40,19 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #007AFF;
+  background: linear-gradient(135deg, var(--uii-blue-primary) 0%, var(--uii-blue-light) 100%);
+  box-shadow: 0 4px 12px rgba(27, 79, 140, 0.3);
   transition: all 0.2s ease;
 }
 
 body.show-chatbot .chatbot-toggler {
   transform: rotate(90deg);
+}
+
+.chatbot-toggler:hover {
+  background: linear-gradient(135deg, var(--uii-blue-dark) 0%, var(--uii-blue-primary) 100%);
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(27, 79, 140, 0.4);
 }
 
 .chatbot-toggler span {
@@ -52,14 +74,14 @@ body.show-chatbot .chatbot-toggler span:last-child {
   right: 35px;
   bottom: 90px;
   width: 420px;
-  background: #FFFFFF;
+  background: var(--neutral-white);
   border-radius: 20px;
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
   transform: scale(0.5);
   transform-origin: bottom right;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 40px rgba(27, 79, 140, 0.15);
   transition: all 0.2s ease;
 }
 
@@ -73,8 +95,8 @@ body.show-chatbot .chatbot {
   padding: 16px 0;
   position: relative;
   text-align: center;
-  color: #fff;
-  background: #007AFF;
+  color: var(--neutral-white);
+  background: linear-gradient(135deg, var(--uii-blue-primary) 0%, var(--uii-blue-light) 100%);
 }
 
 .chatbot header span {
@@ -128,12 +150,12 @@ header h2 {
 .chatbox .incoming span {
   width: 32px;
   height: 32px;
-  color: #fff;
+  color: var(--neutral-white);
   cursor: default;
   text-align: center;
   line-height: 32px;
   align-self: flex-end;
-  background: #007AFF;
+  background: linear-gradient(135deg, var(--uii-blue-primary) 0%, var(--uii-gold-primary) 100%);
   border-radius: 50%;
   margin: 0 8px 7px 0;
 }
@@ -151,20 +173,20 @@ header h2 {
 }
 
 .chatbox .incoming p {
-  background: #F2F2F7;
-  color: #000000;
+  background: var(--neutral-border);
+  color: var(--neutral-text);
   border-radius: 25px 25px 25px 5px;
 }
 
 .chatbox .outgoing p {
-  background: #007AFF;
-  color: #FFFFFF;
+  background: linear-gradient(135deg, var(--uii-blue-primary) 0%, var(--uii-blue-light) 100%);
+  color: var(--neutral-white);
   border-radius: 25px 25px 5px 25px;
 }
 
 .chatbox .chat p.error {
   background: #FF3B30;
-  color: #FFFFFF;
+  color: var(--neutral-white);
   border-radius: 25px;
 }
 
@@ -216,12 +238,12 @@ header h2 {
 .chatbox .incoming p h2,
 .chatbox .incoming p h3,
 .chatbox .incoming p strong {
-  color: #000000;
+  color: var(--neutral-text);
 }
 
 .chatbox .incoming p a {
-  color: #007AFF;
-  text-decoration-color: rgba(0, 122, 255, 0.5);
+  color: var(--uii-blue-primary);
+  text-decoration-color: rgba(27, 79, 140, 0.5);
 }
 
 /* Colors for outgoing messages */
@@ -230,7 +252,7 @@ header h2 {
 .chatbox .outgoing p h3,
 .chatbox .outgoing p strong,
 .chatbox .outgoing p a {
-  color: #FFFFFF;
+  color: var(--neutral-white);
 }
 
 .chatbot .chat-input {
@@ -256,17 +278,23 @@ header h2 {
 
 .chat-input span {
   align-self: flex-end;
-  color: #007AFF;
+  color: var(--uii-gold-primary);
   cursor: pointer;
   height: 55px;
   display: flex;
   align-items: center;
   visibility: hidden;
   font-size: 1.35rem;
+  transition: all 0.2s ease;
 }
 
 .chat-input textarea:valid~span {
   visibility: visible;
+}
+
+.chat-input span:hover {
+  color: var(--uii-gold-dark);
+  transform: scale(1.1);
 }
 
 @media (max-width: 490px) {
@@ -310,13 +338,21 @@ header h2 {
   opacity: 1;
 }
 
+.chatbox .incoming p .source-link-integrated:hover {
+  color: var(--uii-gold-dark);
+}
+
+.chatbox .outgoing p .source-link-integrated:hover {
+  color: var(--uii-gold-primary);
+}
+
 /* Inherit colors from parent bubble */
 .chatbox .incoming p .source-link-integrated {
-  color: #007AFF;
+  color: var(--uii-gold-primary);
 }
 
 .chatbox .outgoing p .source-link-integrated {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--uii-gold-light);
 }
 
 /* Mobile responsiveness - iPhone optimized */
