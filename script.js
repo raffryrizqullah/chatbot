@@ -28,11 +28,15 @@ const createChatLi = (message, className) => {
   return chatLi; // return chat <li> element
 };
 
-// Utility Functions - Simplified Markdown Parser
+// Enhanced Markdown Parser with URL Detection
 const parseMarkdown = (text) => {
   if (!text) return '';
   
   let html = text.trim();
+  
+  // Convert URLs to clickable links first (before other formatting)
+  const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`[\]]+)/g;
+  html = html.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
   
   // Convert headers (### ## #) to HTML
   html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
@@ -42,28 +46,37 @@ const parseMarkdown = (text) => {
   // Convert bold text (**text**)
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   
-  // Convert numbered lists (1. 2. 3.)
+  // Convert numbered lists with improved regex
   html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>(\n<li>.*<\/li>)*)/gm, '<ol>$1</ol>');
   
   // Convert bullet points (- * +)
   html = html.replace(/^[\-\*\+]\s+(.+)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>(\n<li>.*<\/li>)*)/gm, (match) => {
-    if (!match.includes('<ol>')) {
+  
+  // Wrap consecutive list items properly
+  html = html.replace(/(<li>.*?<\/li>(?:\s*<li>.*?<\/li>)*)/gs, (match) => {
+    // Check if this is part of numbered list context
+    const beforeMatch = html.substring(0, html.indexOf(match));
+    const hasNumberedContext = /\d+\.\s+[^<]*$/.test(beforeMatch.split('\n').pop() || '');
+    
+    if (hasNumberedContext || match.includes('1.') || match.includes('2.')) {
+      return '<ol>' + match + '</ol>';
+    } else {
       return '<ul>' + match + '</ul>';
     }
-    return match;
   });
   
-  // Convert line breaks
-  html = html.replace(/\n\n/g, '<br><br>');
+  // Convert line breaks (double newlines to paragraph breaks, single to br)
+  html = html.replace(/\n\n+/g, '<br><br>');
   html = html.replace(/\n/g, '<br>');
+  
+  // Clean up any double br tags
+  html = html.replace(/(<br>\s*){3,}/g, '<br><br>');
   
   return html;
 };
 
 
-// Ultra-minimal single source display
+// iMessage-style integrated source display
 const createSourcesHTML = (sources) => {
   if (!sources || !Array.isArray(sources) || sources.length === 0) {
     return '';
@@ -86,10 +99,8 @@ const createSourcesHTML = (sources) => {
   
   if (!sourceUrl) return '';
   
-  // Return simple source link
-  return `<div class="source-link-simple">
-    <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer">Sumber</a>
-  </div>`;
+  // Return integrated source link (no separate container)
+  return `<br><br><a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="source-link-integrated">📋 Sumber</a>`;
 };
 
 
